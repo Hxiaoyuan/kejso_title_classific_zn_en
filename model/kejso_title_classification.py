@@ -26,7 +26,7 @@ class Kejso_title_classification(nn.Module):
 
         self.device = device
 
-        # initializing classification head
+        # 初始化分类器
         self.classification.weight.data.normal_(mean=0.0, std=head_init_range)
 
     def forward(self, inputs_ids, labels, valid_mask):
@@ -48,13 +48,14 @@ class Kejso_title_classification(nn.Module):
             return logits
 
     def encode_word(self, s):
+        # 待改为新的方法可以  训练
         # tensor_cn_ids = self.xlmr.encode(title_cn)
         tensor_ids = self.xlmr.encode(s)
         if self.is_chinese(s):
             return tensor_ids.cpu().numpy().tolist()[2:-1]
         # remove <s> and </s> ids
         return tensor_ids.cpu().numpy().tolist()[1:-1]
-
+    # 中英文的判断
     def is_chinese(self, s):
         for word in s:
             if '\u4e00' <= word <= '\u9fff':
