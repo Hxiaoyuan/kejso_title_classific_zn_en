@@ -16,19 +16,17 @@ class Kejso_title_classification(nn.Module):
 
         self.linear_1 = nn.Linear(hidden_size, hidden_size)
         # self.linear_2 = nn.Linear(hidden_size, 1)
-        # 定义分类器
         self.classification = nn.Linear(hidden_size, n_labels)
 
         self.label_ignore_idx = label_ignore_idx
 
-        # 使用XLMRModel预训练模型
         self.xlmr = XLMRModel.from_pretrained(pretrained_path)
         self.model = self.xlmr.model
         self.dropout = nn.Dropout(dropout_p)
 
         self.device = device
 
-        # 初始化分类器
+        # initializing classification head
         self.classification.weight.data.normal_(mean=0.0, std=head_init_range)
 
     def forward(self, inputs_ids, labels, valid_mask):
@@ -50,14 +48,13 @@ class Kejso_title_classification(nn.Module):
             return logits
 
     def encode_word(self, s):
-        # 保留 以后训练可以使用中英文向量相加等方法
         # tensor_cn_ids = self.xlmr.encode(title_cn)
         tensor_ids = self.xlmr.encode(s)
         if self.is_chinese(s):
             return tensor_ids.cpu().numpy().tolist()[2:-1]
+        # remove <s> and </s> ids
         return tensor_ids.cpu().numpy().tolist()[1:-1]
 
-    # 中英文的判断
     def is_chinese(self, s):
         for word in s:
             if '\u4e00' <= word <= '\u9fff':

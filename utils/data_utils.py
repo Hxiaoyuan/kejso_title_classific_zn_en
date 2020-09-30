@@ -6,8 +6,20 @@ from torch.utils.data import TensorDataset
 
 
 class InputExample(object):
+    """A single training/test example for simple sequence classification."""
 
     def __init__(self, guid, text_a, text_b=None, label=None):
+        """Constructs a InputExample.
+
+        Args:
+            guid: Unique id for the example.
+            text_a: string. The untokenized text of the first sequence. For single
+            sequence tasks, only this sequence must be specified.
+            text_b: (Optional) string. The untokenized text of the second sequence.
+            Only must be specified for sequence pair tasks.
+            label: (Optional) string. The label of the example. This should be
+            specified for train and dev examples, but not for test examples.
+        """
         self.guid = guid
         self.text_a = text_a
         self.text_b = text_b
@@ -41,13 +53,13 @@ class NerProcessor:
 
     def get_labels(self):
         '''
-            GEO : 地质类
-            CHEM : 化学行业
-            ECO : 经济类
-            GEOG : 地理类
-            IT : 工业技术
+            MED : 医学
+            IND : 工业类
+            ECON : 经济类
+            TECH : 技术类
+            METE : 气象
         '''
-        return ["0", "CHEM", "GEOG", "ECO", "GEO", "IT"]
+        return ["0", "MED", "IND", "ECON", "TECH", "METE"]
 
     def _read_file(self, filename):
         '''
@@ -61,16 +73,28 @@ class NerProcessor:
         for i, line in enumerate(f.readlines()):
 
             splits = line.split("\1\t\1")
+            if len(splits) < 2:
+                print(line)
+                break
             assert len(splits) >= 2, "error on line {}. Found {} splits".format(i, len(splits))
-            title, tag = splits[0], splits[-1].strip()
+            title_cn, title_en, tag = splits[0], splits[1], splits[-1].strip()
             assert tag in self.get_labels(), "unknown tag {} in line {}".format(tag, i)
-            sentence.append(title.strip())
+
+            sentence.append(title_cn.strip())
             label.append(tag.strip())
 
             if len(sentence) > 0:
                 data.append((sentence, label))
                 sentence = []
                 label = []
+            sentence.append(title_en.strip())
+            label.append(tag.strip())
+
+            if len(sentence) > 0:
+                data.append((sentence, label))
+                sentence = []
+                label = []
+
         f.close()
         return data
 
@@ -87,7 +111,6 @@ class NerProcessor:
         return examples
 
 
-# 特征转化 待优化
 def convert_examples_to_features(examples, label_list, max_seq_length, encode_method):
     # ignored_label = "IGNORE"
     label_map = {label: i for i, label in enumerate(label_list)}

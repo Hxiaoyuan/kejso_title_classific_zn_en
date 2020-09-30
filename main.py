@@ -113,6 +113,8 @@ def main():
             model, optimizer, opt_level=args.fp16_opt_level)
 
     global_step = 0
+    nb_tr_steps = 0
+    tr_loss = 0
     if args.do_train:
         train_features = convert_examples_to_features(
             train_examples, label_list, args.max_seq_length, model.encode_word)
